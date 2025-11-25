@@ -59,7 +59,12 @@ export function trackEvent(eventName: string, eventData?: EventData): void {
  * trackRevenue('purchase', 99.99, 'USD', { productId: 'abc123' });
  * ```
  */
-export function trackRevenue(eventName: string, revenue: number, currency = 'USD', data?: EventData): void {
+export function trackRevenue(
+  eventName: string,
+  revenue: number,
+  currency = 'USD',
+  data?: EventData,
+): void {
   waitForTracker(() => {
     const eventData: EventData = {
       ...data,

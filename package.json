@@ -19,7 +19,7 @@
     "directory": "entro-astro"
   },
   "bugs": {
-    "url": "https://github.com/entro314labs/entrolytics-system/issues"
+    "url": "https://github.com/entro314labs/entro-astro/issues"
   },
   "type": "module",
   "main": "./dist/index.js",
