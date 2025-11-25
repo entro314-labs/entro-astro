@@ -1,6 +1,6 @@
 import type { AstroIntegration } from 'astro';
 
-const DEFAULT_HOST = 'https://entrolytics.click';
+const DEFAULT_HOST = 'https://cloud.entrolytics.click';
 
 export interface EntrolyticsOptions {
   /**
@@ -10,7 +10,7 @@ export interface EntrolyticsOptions {
 
   /**
    * Entrolytics host URL (for self-hosted instances)
-   * @default 'https://entrolytics.click'
+   * @default 'https://cloud.entrolytics.click'
    */
   host?: string;
 
@@ -48,6 +48,29 @@ export interface EntrolyticsOptions {
    * @default false
    */
   cacheScript?: boolean;
+
+  /**
+   * Use edge runtime endpoints for faster response times
+   * @default true
+   */
+  useEdgeRuntime?: boolean;
+
+  /**
+   * Custom tag for A/B testing
+   */
+  tag?: string;
+
+  /**
+   * Strip query parameters from URLs
+   * @default false
+   */
+  excludeSearch?: boolean;
+
+  /**
+   * Strip hash from URLs
+   * @default false
+   */
+  excludeHash?: boolean;
 }
 
 function generateScriptTag(options: EntrolyticsOptions): string {
@@ -59,15 +82,17 @@ function generateScriptTag(options: EntrolyticsOptions): string {
     trackFileDownloads = false,
     respectDnt = false,
     domains,
+    useEdgeRuntime = true,
+    tag,
+    excludeSearch = false,
+    excludeHash = false,
   } = options;
 
-  const scriptUrl = `${host.replace(/\/$/, '')}/script.js`;
+  // Use edge runtime script if enabled
+  const scriptPath = useEdgeRuntime ? '/script-edge.js' : '/script.js';
+  const scriptUrl = `${host.replace(/\/$/, '')}${scriptPath}`;
 
-  const attributes: string[] = [
-    `src="${scriptUrl}"`,
-    `data-website-id="${websiteId}"`,
-    'defer',
-  ];
+  const attributes: string[] = [`src="${scriptUrl}"`, `data-website-id="${websiteId}"`, 'defer'];
 
   if (!autoTrack) {
     attributes.push('data-auto-track="false"');
@@ -87,6 +112,18 @@ function generateScriptTag(options: EntrolyticsOptions): string {
 
   if (domains && domains.length > 0) {
     attributes.push(`data-domains="${domains.join(',')}"`);
+  }
+
+  if (tag) {
+    attributes.push(`data-tag="${tag}"`);
+  }
+
+  if (excludeSearch) {
+    attributes.push('data-exclude-search="true"');
+  }
+
+  if (excludeHash) {
+    attributes.push('data-exclude-hash="true"');
   }
 
   return `<script ${attributes.join(' ')}></script>`;
@@ -134,7 +171,7 @@ export default function entrolytics(options: EntrolyticsOptions): AstroIntegrati
               // This is a fallback for View Transitions
             }
           });
-        `
+        `,
         );
       },
     },
