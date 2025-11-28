@@ -133,11 +133,20 @@ function generateScriptTag(options: EntrolyticsOptions): string {
  * Astro integration for Entrolytics analytics
  *
  * @example
+ * Zero-config (reads from import.meta.env):
  * ```ts
  * // astro.config.mjs
  * import { defineConfig } from 'astro/config';
  * import entrolytics from '@entro314labs/entro-astro';
  *
+ * export default defineConfig({
+ *   integrations: [entrolytics()],
+ * });
+ * ```
+ *
+ * @example
+ * Explicit config:
+ * ```ts
  * export default defineConfig({
  *   integrations: [
  *     entrolytics({
@@ -147,16 +156,47 @@ function generateScriptTag(options: EntrolyticsOptions): string {
  * });
  * ```
  */
-export default function entrolytics(options: EntrolyticsOptions): AstroIntegration {
-  if (!options.websiteId) {
+export default function entrolytics(options: Partial<EntrolyticsOptions> = {}): AstroIntegration {
+  // Auto-read from environment variables
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const env = (import.meta as any).env || {};
+  const websiteId =
+    options.websiteId ||
+    env.PUBLIC_ENTROLYTICS_WEBSITE_ID ||
+    env.VITE_ENTROLYTICS_WEBSITE_ID;
+
+  const host =
+    options.host || env.PUBLIC_ENTROLYTICS_HOST || env.VITE_ENTROLYTICS_HOST || DEFAULT_HOST;
+
+  if (!websiteId) {
+    if (env.DEV) {
+      console.warn(
+        '[@entro314labs/entro-astro] Missing websiteId. Add PUBLIC_ENTROLYTICS_WEBSITE_ID to your .env file.',
+      );
+    }
     throw new Error('[@entro314labs/entro-astro] websiteId is required');
   }
+
+  const finalOptions: EntrolyticsOptions = {
+    websiteId, // Required - guaranteed to exist from validation above
+    host,
+    autoTrack: options.autoTrack,
+    trackOutboundLinks: options.trackOutboundLinks,
+    trackFileDownloads: options.trackFileDownloads,
+    respectDnt: options.respectDnt,
+    domains: options.domains,
+    cacheScript: options.cacheScript,
+    useEdgeRuntime: options.useEdgeRuntime,
+    tag: options.tag,
+    excludeSearch: options.excludeSearch,
+    excludeHash: options.excludeHash,
+  };
 
   return {
     name: '@entro314labs/entro-astro',
     hooks: {
       'astro:config:setup': ({ injectScript }) => {
-        const scriptTag = generateScriptTag(options);
+        const scriptTag = generateScriptTag(finalOptions);
 
         // Inject script into head
         injectScript('head-inline', scriptTag);

@@ -19,16 +19,29 @@ import entrolytics from '@entro314labs/entro-astro';
 
 export default defineConfig({
   integrations: [
-    entrolytics({
-      websiteId: 'your-website-id',
-    }),
+    entrolytics(), // Zero-config: reads from .env
   ],
 });
+```
+
+Add to your `.env` file:
+
+```bash
+PUBLIC_ENTROLYTICS_WEBSITE_ID=your-website-id
+PUBLIC_ENTROLYTICS_HOST=https://entrolytics.click
 ```
 
 That's it! The integration automatically injects the tracking script and handles View Transitions.
 
 ## Configuration Options
+
+### Zero-Config (Recommended)
+
+```ts
+integrations: [entrolytics()] // Reads from PUBLIC_ENTROLYTICS_WEBSITE_ID
+```
+
+### Explicit Configuration
 
 ```ts
 entrolytics({
